@@ -39,7 +39,7 @@ input:focus {
 button {
   border-radius: 8px;
   padding: 8px 16px;
-  width: 91px;
+  width: auto;
   height: 40px;
   border: none;
   background: #4e75ff;
@@ -95,6 +95,7 @@ button:hover {
   flex-wrap: wrap;
   column-gap: 24px;
   row-gap: 24px;
+  margin-bottom: 32px;
 }
 
 .gallery-item {
