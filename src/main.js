@@ -15,14 +15,17 @@ import 'izitoast/dist/css/iziToast.min.css';
 const form = document.querySelector('.form');
 let page = 1;
 let query = '';
+const perPage = 15;
+let totalPages = 0;
 
 form.addEventListener('submit', handlerSubmit);
 loadMoreBtn.addEventListener('click', onLoadMore);
 
-function handlerSubmit(event) {
+async function handlerSubmit(event) {
   event.preventDefault();
   query = event.target.elements['search-text'].value.trim();
   page = 1;
+
   if (!query.length) {
     iziToast.error({
       position: 'topRight',
@@ -32,33 +35,39 @@ function handlerSubmit(event) {
     });
     return;
   }
+
   clearGallery();
   showLoader();
-  getImagesByQuery(query, page)
-    .then(res => {
-      if (!res.hits.length) {
-        iziToast.error({
-          position: 'topRight',
-          progressBar: false,
-          timeout: 3000,
-          message:
-            'Sorry, there are no images matching your search query. Please try again!',
-        });
-      }
-      createGallery(res.hits);
-      showLoadMoreButton();
-    })
-    .catch(error => {
+
+  try {
+    const res = await getImagesByQuery(query, page);
+    if (!res.hits.length) {
       iziToast.error({
         position: 'topRight',
         progressBar: false,
         timeout: 3000,
-        message: `${error.message}`,
+        message:
+          'Sorry, there are no images matching your search query. Please try again!',
       });
-    })
-    .finally(() => {
-      hideLoader();
+      return;
+    }
+
+    createGallery(res.hits);
+
+    totalPages = Math.ceil(res.totalHits / perPage);
+    if (page < totalPages) {
+      showLoadMoreButton();
+    }
+  } catch (error) {
+    iziToast.error({
+      position: 'topRight',
+      progressBar: false,
+      timeout: 3000,
+      message: `${error.message}`,
     });
+  } finally {
+    hideLoader();
+  }
   form.reset();
 }
 
@@ -75,9 +84,6 @@ async function onLoadMore() {
       top: cardHeight * 2,
       behavior: 'smooth',
     });
-
-    const perPage = 15;
-    const totalPages = Math.ceil(data.totalHits / perPage);
 
     if (page >= totalPages) {
       hideLoadMoreButton();
